@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <script src="config.js"></script>
+    <style>
+        body { background: #121212; color: #fff; font-family: sans-serif; padding: 20px; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .card { background: #1e1e24; padding: 15px; border-radius: 15px; margin-bottom: 15px; }
+        .q-text { font-weight: bold; margin-bottom: 10px; font-size: 16px; color: #f09433; }
+        textarea { width: 100%; padding: 10px; background: #2a2a35; border: none; border-radius: 8px; color: #fff; box-sizing: border-box; resize: vertical; min-height: 60px; margin-bottom: 10px; }
+        .btn { background: #bc1888; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+        .btn-edit { background: #444; }
+        .logout { background: transparent; border: 1px solid #fff; color: #fff; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Admin Dashboard</h2>
+        <button class="btn logout" onclick="logout()">Logout</button>
+    </div>
+    <div id="loader">Loading questions...</div>
+    <div id="q-container"></div>
+</div>
+
+<script>
+    if(localStorage.getItem('adminAuth') !== 'true') {
+        window.location.href = 'admin.login.html';
+    }
+
+    function logout() {
+        localStorage.removeItem('adminAuth');
+        window.location.href = 'admin.login.html';
+    }
+
+    async function loadData() {
+        const container = document.getElementById('q-container');
+        document.getElementById('loader').style.display = 'block';
+        container.innerHTML = '';
+
+        try {
+            const res = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'get_qa' })
+            });
+            const data = await res.json();
+            document.getElementById('loader').style.display = 'none';
+
+            data.data.forEach(item => {
+                const isAnswered = item.a && item.a.trim() !== '';
+                container.innerHTML += `
+                    <div class="card">
+                        <div class="q-text">Q: ${item.q}</div>
+                        <textarea id="ans-${item.row}" placeholder="Type your answer here...">${item.a}</textarea>
+                        <button class="btn ${isAnswered ? 'btn-edit' : ''}" onclick="submitAnswer(${item.row}, this)">
+                            ${isAnswered ? 'Edit Answer' : 'Submit Answer'}
+                        </button>
+                    </div>
+                `;
+            });
+        } catch(e) {
+            document.getElementById('loader').innerText = 'Error loading data.';
+        }
+    }
+
+    async function submitAnswer(row, btnEl) {
+        const answer = document.getElementById(`ans-${row}`).value;
+        const originalText = btnEl.innerText;
+        btnEl.innerText = 'Saving...';
+        
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'update_a', row: row, a: answer })
+            });
+            btnEl.innerText = 'Saved!';
+            btnEl.classList.add('btn-edit');
+            setTimeout(() => btnEl.innerText = 'Edit Answer', 2000);
+        } catch(e) {
+            alert('Failed to save');
+            btnEl.innerText = originalText;
+        }
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>

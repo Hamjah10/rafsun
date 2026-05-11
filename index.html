@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy Birthday Rafsun</title>
+    <script src="config.js"></script>
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f0f11; 
+            --insta-grad: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            --glass: rgba(255, 255, 255, 0.08); 
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg); color: white; overflow-x: hidden; }
+        
+        /* Mobile Wrapper */
+        .mobile-app { max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; background: var(--bg); box-shadow: 0 0 50px rgba(0,0,0,0.5); padding-bottom: 50px; }
+        
+        /* Background Animations */
+        .bg-blobs { position: fixed; top:0; left:0; right:0; bottom:0; z-index: 0; pointer-events: none; overflow: hidden; max-width: 480px; margin: auto; }
+        .blob { position: absolute; filter: blur(60px); border-radius: 50%; animation: float 10s infinite alternate; opacity: 0.4; }
+        .blob-1 { width: 200px; height: 200px; background: #bc1888; top: -50px; left: -50px; }
+        .blob-2 { width: 250px; height: 250px; background: #f09433; bottom: -100px; right: -50px; animation-delay: -5s; }
+        @keyframes float { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(50px) scale(1.2); } }
+
+        /* General Classes */
+        .section { position: relative; z-index: 1; padding: 20px; text-align: center; }
+        .glass-card { background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 20px; margin-bottom: 20px; transition: transform 0.3s ease, box-shadow 0.3s ease; transform-style: preserve-3d; }
+        .glass-card:hover { box-shadow: 0 15px 30px rgba(0,0,0,0.4); }
+        
+        /* Entrance Animations */
+        .reveal { opacity: 0; transform: translateY(40px); transition: 0.8s all cubic-bezier(0.17, 0.85, 0.43, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* Typography & Components */
+        h1, h2 { background: var(--insta-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .hero-img { width: 150px; height: 150px; border-radius: 50%; padding: 4px; background: var(--insta-grad); object-fit: cover; margin-bottom: 15px; }
+        .sub-tagline { font-size: 14px; color: #ccc; margin-bottom: 20px; }
+        .highlight { color: #fff; font-weight: bold; background: var(--insta-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* Buttons */
+        .btn { background: var(--insta-grad); border: none; padding: 12px 24px; border-radius: 30px; color: white; font-weight: bold; width: 100%; cursor: pointer; transition: transform 0.1s; margin-top: 10px; display: flex; justify-content: center; align-items: center; text-decoration: none;}
+        .btn:active { transform: scale(0.95); }
+        
+        /* Inputs */
+        input, textarea { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: white; padding: 15px; border-radius: 15px; margin-bottom: 10px; outline: none; font-size: 16px; }
+        textarea { resize: none; height: 100px; }
+
+        /* Timer */
+        .timer-box { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
+        .time-slot { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; width: 60px; }
+        .time-slot span { display: block; font-size: 20px; font-weight: bold; }
+        .time-slot small { font-size: 10px; text-transform: uppercase; }
+
+        /* Locked Content & Images */
+        .locked-content { display: none; }
+        .report-img { width: 100%; border-radius: 15px; margin-bottom: 15px; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .cv-details { text-align: left; font-size: 14px; line-height: 1.8; }
+        
+        /* Gallery / Memories Slideshow */
+        .gallery-container { position: relative; width: 100%; height: 350px; perspective: 1000px; margin-top: 20px; }
+        .gallery-card { 
+            position: absolute; top:0; left:0; width: 100%; height: 100%; 
+            background: var(--glass); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+            border: 1px solid var(--glass-border); border-radius: 20px; padding: 15px;
+            transition: 0.6s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; transform: translateZ(-100px) scale(0.8); 
+        }
+        .gallery-card.active { opacity: 1; transform: translateZ(0) scale(1); z-index: 2; }
+        .gallery-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+
+        /* Loader & Animations */
+        .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s infinite linear; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .shake { animation: shake 0.3s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+        /* Instagram Story style Q&A */
+        .ig-story-card {
+            background: var(--insta-grad); border-radius: 25px; padding: 30px 20px; margin-bottom: 25px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 350px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.4); transform-style: preserve-3d;
+        }
+        .ig-story-q {
+            background: rgba(255, 255, 255, 0.95); color: #000; width: 90%; border-radius: 20px;
+            padding: 25px 20px; text-align: center; margin-bottom: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transform: translateZ(30px);
+        }
+        .ig-q-header { font-size: 12px; color: #666; font-weight: 700; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        .ig-q-body { font-size: 18px; font-weight: 800; color: #111; }
+        .ig-story-a { color: #fff; font-size: 22px; font-weight: 800; text-align: center; text-shadow: 0 4px 10px rgba(0,0,0,0.5); transform: translateZ(40px); padding: 0 10px; }
+
+        /* Celebration Balloons coming from the very bottom */
+        .balloon-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; pointer-events: none; z-index: 1000; display: none; overflow: hidden; }
+        .balloon { position: absolute; bottom: -120px; width: 40px; height: 50px; border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%; animation: flyUp ease-in forwards; opacity: 0.9; box-shadow: inset -5px -5px 15px rgba(0,0,0,0.2); }
+        .balloon::before { content: ""; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 10px solid inherit; }
+        .balloon::after { content: ""; position: absolute; bottom: -50px; left: 50%; transform: translateX(-50%); width: 1px; height: 50px; background: rgba(255,255,255,0.4); }
+        @keyframes flyUp { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-120vh) rotate(15deg); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<div class="mobile-app">
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <!-- Celebration Elements -->
+    <div class="balloon-container" id="balloon-container"></div>
+
+    <!-- Audio Elements -->
+    <audio id="timer-audio" src="hb.mp3"></audio>
+    <audio id="gallery-audio" src="hbf.mp3" loop></audio>
+
+    <!-- Hero Section -->
+    <div class="section reveal">
+        <img src="https://i.postimg.cc/pTgR9jF0/hero.png" alt="Rafsun" class="hero-img tilt-element">
+        <h1>Happy Birthday Rafsun</h1>
+        <p class="sub-tagline">This is our "<span id="typed" class="highlight"></span>" friend</p>
+    </div>
+
+    <!-- Timer Section -->
+    <div class="section reveal">
+        <div class="glass-card tilt-element">
+            <h2>Countdown to May 12</h2>
+            <div class="timer-box" id="timer-display">
+                <div class="time-slot"><span id="days">00</span><small>Days</small></div>
+                <div class="time-slot"><span id="hours">00</span><small>Hours</small></div>
+                <div class="time-slot"><span id="mins">00</span><small>Mins</small></div>
+                <div class="time-slot"><span id="secs">00</span><small>Secs</small></div>
+            </div>
+            
+            <!-- Shows up when the timer ends -->
+            <div id="bday-wrapper" style="display:none; text-align:center;">
+                <!-- Full width size matching report-img -->
+                <img src="s.gif" alt="Celebrate" class="report-img" style="margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+                <p style="font-weight:bold; color:#f09433; font-size: 22px; margin-bottom: 15px;">Happy Birthday! 🎉</p>
+                <button class="btn" onclick="toggleBdayAudio(this)">Play Song 🎵</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CV Details Section -->
+    <div class="section reveal">
+        <div class="glass-card tilt-element" id="cv-lock-card">
+            <h2>Top Secret Report</h2>
+            <p style="font-size:12px; margin-bottom:15px;">Encrypted File. Requires Passcode.</p>
+            <button class="btn" onclick="unlockCV()">Unlock with Code</button>
+        </div>
+        
+        <div class="glass-card locked-content tilt-element" id="cv-content">
+            <h2>Suspect Details</h2>
+            <img src="https://i.postimg.cc/Kv7xzRvY/report.jpg" alt="Report" class="report-img">
+            <div class="cv-details">
+                <p><strong>Full Name:</strong> RAFSUN ABDULAH</p>
+                <p><strong>Date of Birth:</strong> May 12, 2010</p>
+                <p><strong>Blood Group:</strong> A+</p>
+                <p><strong>Gender:</strong> Male (May be)</p>
+                <p><strong>Mother's Name:</strong> JOTSHNA BEGUM</p>
+                <p><strong>Father's Name:</strong> MD SAYEDUR RAHAMAN MOLLA</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gift Gallery Section -->
+    <div class="section reveal">
+        <div class="glass-card tilt-element" id="gallery-lock-card">
+            <h2>Secret Gift Vault 🎁</h2>
+            <p style="font-size:12px; margin-bottom:15px;">Tap the box 3 times to open.</p>
+            <button class="btn" onclick="tapGallery(this)">Tap Me (<span id="tap-count">0</span>/3)</button>
+        </div>
+
+        <div class="locked-content" id="gallery-content">
+            <h2 style="margin-bottom: 10px;">Memories</h2>
+            <div class="gallery-container" id="gallery-slider">
+                <!-- Cards Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- NGL Section -->
+    <div class="section reveal">
+        <div class="glass-card tilt-element">
+            <h2>Ask Me Anything</h2>
+            <p style="font-size:12px; margin-bottom:15px; color:#aaa;">100% Anonymous like NGL</p>
+            <textarea id="ngl-input" placeholder="Send an anonymous message..."></textarea>
+            <button class="btn" id="ngl-btn" onclick="sendNGL()">Send Message</button>
+        </div>
+    </div>
+
+    <!-- Answer Cards -->
+    <div class="section reveal">
+        <div class="glass-card tilt-element" id="answers-lock-card">
+            <h2>View Responses</h2>
+            <p style="font-size:12px; margin-bottom:15px;">Enter admin code to view.</p>
+            <button class="btn" onclick="unlockAnswers()">Read Answers</button>
+        </div>
+        <div class="locked-content" id="answers-content">
+            <h2 style="margin-bottom: 20px;">Q&A Stories</h2>
+            <div id="qa-list"><div class="spinner" style="margin: auto;"></div></div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="section reveal">
+        <div class="glass-card tilt-element">
+            <h2>If you love this G@y,</h2>
+            <img src="67.gif" alt="Gif" class="report-img" style="margin-top: 10px;">
+            <a href="https://www.instagram.com/_crispy._sun_/" target="_blank" class="btn">Follow Now</a>
+        </div>
+    </div>
+
+    <div class="section">
+        <a href="admin.login.html" style="color:#555; font-size:12px; text-decoration:none; letter-spacing: 1px;">ADMIN ACCESS</a>
+    </div>
+</div>
+
+<script>
+    // --- Tilt Effect Helper ---
+    function applyTilt(elements) {
+        elements.forEach(el => {
+            const tilt = (e) => {
+                const rect = el.getBoundingClientRect();
+                const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left - rect.width / 2;
+                const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top - rect.height / 2;
+                el.style.transform = `perspective(1000px) rotateX(${-y / 15}deg) rotateY(${x / 15}deg) scale3d(1.02, 1.02, 1.02)`;
+            };
+            const reset = () => el.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)`;
+            
+            el.addEventListener('mousemove', tilt);
+            el.addEventListener('touchmove', tilt);
+            el.addEventListener('mouseleave', reset);
+            el.addEventListener('touchend', reset);
+        });
+    }
+
+    // Initial Tilt application
+    applyTilt(document.querySelectorAll('.tilt-element'));
+
+    // --- 1. Typing Animation ---
+    const words =["Stupid", "Gay", "Nigga", "Cute", "Soft", "Extrovert"];
+    let wordIdx = 0, charIdx = 0, isDeleting = false;
+    function typeEffect() {
+        const el = document.getElementById("typed");
+        const currentWord = words[wordIdx];
+        if (isDeleting) {
+            el.innerText = currentWord.substring(0, charIdx--);
+        } else {
+            el.innerText = currentWord.substring(0, charIdx++);
+        }
+        
+        let speed = isDeleting ? 50 : 100;
+        if (!isDeleting && charIdx > currentWord.length) {
+            isDeleting = true; speed = 1500;
+        } else if (isDeleting && charIdx < 0) {
+            isDeleting = false; wordIdx = (wordIdx + 1) % words.length; speed = 300;
+        }
+        setTimeout(typeEffect, speed);
+    }
+    typeEffect();
+
+    // --- 2. Entrance Animations ---
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if(entry.isIntersecting) entry.target.classList.add('active');
+        });
+    });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // --- 3. Party Celebration Function ---
+    function fireCelebration() {
+        // Fire Confetti
+        if (window.confetti) {
+            let duration = 4000;
+            let animationEnd = Date.now() + duration;
+            let defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 999 };
+
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+            let interval = setInterval(function() {
+                let timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                let particleCount = 50 * (timeLeft / duration);
+                
+                // Shoot from bottom-left and bottom-right
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }, colors:['#f09433', '#e6683c', '#dc2743', '#cc2366', '#bc1888'] }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }, colors:['#f09433', '#e6683c', '#dc2743', '#cc2366', '#bc1888'] }));
+            }, 250);
+        }
+
+        // Spawn Balloons
+        const bContainer = document.getElementById('balloon-container');
+        bContainer.style.display = 'block';
+        const colors =['#f09433', '#dc2743', '#bc1888', '#fff', '#e6683c'];
+        
+        for (let i = 0; i < 25; i++) {
+            let balloon = document.createElement('div');
+            balloon.className = 'balloon';
+            balloon.style.left = Math.random() * 90 + 'vw';
+            balloon.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            balloon.style.color = balloon.style.backgroundColor; // for the tail border-bottom color inherit trick
+            balloon.style.animationDuration = (Math.random() * 3 + 4) + 's';
+            balloon.style.animationDelay = (Math.random() * 1.5) + 's';
+            bContainer.appendChild(balloon);
+        }
+        
+        // Remove balloons after animation finishes to keep DOM clean
+        setTimeout(() => { bContainer.innerHTML = ''; bContainer.style.display = 'none'; }, 8000);
+    }
+
+    // --- 4. Timer Logic with 12 May 2026 Target ---
+    // Month is 0-indexed in JS (January is 0, May is 4)
+    const targetDate = new Date(2026, 4, 12, 0, 0, 0).getTime(); 
+    let shortCountdownVal = 3;
+    let isPassed = false;
+
+    // Check if current time is already past May 12, 2026, 00:00
+    if (new Date().getTime() >= targetDate) {
+        isPassed = true;
+    }
+
+    function triggerBdayEvent() {
+        document.getElementById('timer-display').style.display = 'none';
+        document.getElementById('bday-wrapper').style.display = 'block';
+        
+        fireCelebration();
+
+        const audio = document.getElementById('timer-audio');
+        audio.play().then(() => {
+            document.querySelector('#bday-wrapper .btn').innerHTML = 'Pause Song ⏸️';
+        }).catch(()=>{
+            console.log("Autoplay blocked. User must click the play button.");
+        });
+    }
+
+    const timerInterval = setInterval(() => {
+        if (isPassed) {
+            // Count down 3, 2, 1 and fire
+            document.getElementById('days').innerText = '00';
+            document.getElementById('hours').innerText = '00';
+            document.getElementById('mins').innerText = '00';
+            document.getElementById('secs').innerText = String(shortCountdownVal).padStart(2, '0');
+
+            if (shortCountdownVal <= 0) {
+                clearInterval(timerInterval);
+                triggerBdayEvent();
+            }
+            shortCountdownVal--;
+        } else {
+            // Normal Countdown
+            const now = new Date().getTime();
+            const dist = targetDate - now;
+
+            if (dist <= 0) {
+                clearInterval(timerInterval);
+                triggerBdayEvent();
+                return;
+            }
+            
+            document.getElementById('days').innerText = String(Math.floor(dist / (1000 * 60 * 60 * 24))).padStart(2, '0');
+            document.getElementById('hours').innerText = String(Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+            document.getElementById('mins').innerText = String(Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+            document.getElementById('secs').innerText = String(Math.floor((dist % (1000 * 60)) / 1000)).padStart(2, '0');
+        }
+    }, 1000);
+
+    // Audio Play/Pause Toggle Helper
+    function toggleBdayAudio(btn) {
+        const audio = document.getElementById('timer-audio');
+        if(audio.paused) {
+            audio.play();
+            btn.innerHTML = 'Pause Song ⏸️';
+        } else {
+            audio.pause();
+            btn.innerHTML = 'Play Song 🎵';
+        }
+    }
+
+    // --- 5. Unlocks & Microinteractions ---
+    function unlockCV() {
+        if(prompt("Enter Passcode:") === "67") {
+            document.getElementById('cv-lock-card').style.display = 'none';
+            document.getElementById('cv-content').style.display = 'block';
+        } else {
+            alert("Wrong code!");
+        }
+    }
+
+    let clicks = 0;
+    const galleryImgs =[
+    "https://i.postimg.cc/8PdN5jPm/1.jpg",
+    "https://i.postimg.cc/Kv7xzRvt/10.jpg",
+    "https://i.postimg.cc/PrbTxPrb/11.jpg",
+    "https://i.postimg.cc/vH7bBcHL/12.jpg",
+    "https://i.postimg.cc/DyQnZ8yc/13.jpg",
+    "https://i.postimg.cc/jd6t5LdS/14.jpg",
+    "https://i.postimg.cc/Kv7xzRvK/2.jpg",
+    "https://i.postimg.cc/yYhsdkYx/3.jpg",
+    "https://i.postimg.cc/YqNM9hqm/4.jpg",
+    "https://i.postimg.cc/65Vt3y5v/5.jpg",
+    "https://i.postimg.cc/CLCS1zL8/6.jpg",
+    "https://i.postimg.cc/tCdpTYCP/7.jpg",
+    "https://i.postimg.cc/9FPCMrFZ/8.jpg",
+    "https://i.postimg.cc/QxghtHxp/9.jpg"
+];
+
+    function tapGallery(btn) {
+        clicks++;
+        document.getElementById('tap-count').innerText = clicks;
+        btn.parentElement.classList.remove('shake');
+        void btn.parentElement.offsetWidth; 
+        btn.parentElement.classList.add('shake');
+        
+        if(clicks >= 3) {
+            document.getElementById('gallery-lock-card').style.display = 'none';
+            document.getElementById('gallery-content').style.display = 'block';
+            document.getElementById('gallery-audio').play().catch(()=>{});
+            initGallery();
+        }
+    }
+
+    function initGallery() {
+        const slider = document.getElementById('gallery-slider');
+        slider.innerHTML = '';
+        
+        galleryImgs.forEach((src, i) => {
+            slider.innerHTML += `
+                <div class="gallery-card ${i === 0 ? 'active' : ''}">
+                    <img src="${src}" alt="Memory">
+                </div>
+            `;
+        });
+
+        let idx = 0;
+        setInterval(() => {
+            const cards = slider.querySelectorAll('.gallery-card');
+            if(cards.length === 0) return;
+            cards[idx].classList.remove('active');
+            idx = (idx + 1) % cards.length;
+            cards[idx].classList.add('active');
+        }, 2500);
+    }
+
+    // --- 6. Database APIs (NGL & Q&A) ---
+    async function sendNGL() {
+        const val = document.getElementById('ngl-input').value.trim();
+        if(!val) return;
+        const btn = document.getElementById('ngl-btn');
+        btn.innerHTML = '<div class="spinner"></div>';
+        
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'add_q', q: val })
+            });
+            document.getElementById('ngl-input').value = '';
+            btn.innerHTML = 'Sent Successfully!';
+            setTimeout(() => btn.innerHTML = 'Send Message', 2500);
+        } catch(e) {
+            btn.innerHTML = 'Error Sending!';
+            setTimeout(() => btn.innerHTML = 'Send Message', 2500);
+        }
+    }
+
+    async function unlockAnswers() {
+        if(prompt("Enter Code:") === "67") {
+            document.getElementById('answers-lock-card').style.display = 'none';
+            document.getElementById('answers-content').style.display = 'block';
+            
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action: 'get_qa' })
+                });
+                const data = await res.json();
+                const container = document.getElementById('qa-list');
+                container.innerHTML = '';
+                
+                const answered = data.data.filter(item => item.a && item.a.trim() !== '');
+                if(answered.length === 0) container.innerHTML = '<p style="text-align:center;">No answered questions yet.</p>';
+                
+                answered.forEach(item => {
+                    container.innerHTML += `
+                        <div class="ig-story-card tilt-element">
+                            <div class="ig-story-q">
+                                <div class="ig-q-header">Ask Me Anything</div>
+                                <div class="ig-q-body">"${item.q}"</div>
+                            </div>
+                            <div class="ig-story-a">${item.a}</div>
+                        </div>`;
+                });
+                applyTilt(container.querySelectorAll('.tilt-element'));
+            } catch(e) {
+                document.getElementById('qa-list').innerHTML = '<p style="text-align:center;">Error loading data.</p>';
+            }
+        } else {
+            alert("Wrong code!");
+        }
+    }
+</script>
+</body>
+</html>
